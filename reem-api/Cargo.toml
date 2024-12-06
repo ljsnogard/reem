@@ -1,0 +1,15 @@
+﻿[package]
+name = "reem-api"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+authors = ["lino <lino_snsalias@outlook.com>"]
+description = "REEM Web API"
+readme = "README.md"
+
+[dependencies]
+salvo = "0.74"
+tokio = { version = "1", features = ["macros"] }
+tracing = "0.1"
+tracing-subscriber = "0.3"

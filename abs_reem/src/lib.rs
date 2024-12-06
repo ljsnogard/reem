@@ -3,6 +3,6 @@
 
 #![no_std]
 
-mod reem_;
+mod common;
 
-pub use reem_::*;
+pub use common::*;
