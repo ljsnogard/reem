@@ -3,12 +3,11 @@
 /// N 维矢量，用于描述职位要求，候选人能力
 pub trait TrAbility
 where
-    Self: Clone + Copy,
+    Self: Clone,
 {
     type NumType: num_traits::Num;
-    const N: usize;
 
-    fn vector(&self) -> &[Self::NumType; Self::N];
+    fn vector(&self) -> &[Self::NumType];
 }
 
 pub trait TrRoundId
@@ -32,20 +31,26 @@ where
 /// 单条工作经历记录，包括当时的岗位要求，候选人当时的能力数据，以及履职时长（轮数）
 pub trait TrExperience {
     type Ability: TrAbility;
+    type CandidateId: TrCandidateId;
     type RoundId: TrRoundId;
+
+    fn candidate_id(&self) -> &Self::CandidateId;
 
     /// 该工作经历的技能要求
     fn requirement(&self) -> &Self::Ability;
 
-    fn period(&self) -> Range<Self::RoundId>;
+    fn period(&self) -> &Range<Self::RoundId>;
 }
 
 pub trait TrResume {
     type Ability: TrAbility;
     type CandidateId: TrCandidateId;
-    type Experience: TrExperience<Ability = Self::Ability>;
+    type Experience: TrExperience<
+        Ability = Self::Ability,
+        CandidateId = Self::CandidateId,
+    >;
 
-    fn candidate_id(&self) -> Self::CandidateId;
+    fn candidate_id(&self) -> &Self::CandidateId;
 
     fn experiences(&self) -> impl IntoIterator<Item = &Self::Experience>;
 }
@@ -57,11 +62,11 @@ pub trait TrCandidateSelect {
     type RoundId: TrRoundId;
 
     /// Returns Some(round) if the capability meets the requirement, else None.
-    fn sort<'a>(
-        &'a self,
+    fn sort(
+        &self,
         current_round: Self::RoundId,
-        requirement: &'a Self::Ability,
-        get_capability: impl Fn(Self::CandidateId) -> &'a Self::Ability,
+        requirement: Self::Ability,
+        get_capability: impl Fn(Self::CandidateId) -> Self::Ability,
         id_iterator: impl IntoIterator<Item = Self::CandidateId>,
     ) -> impl IntoIterator<Item = (Self::CandidateId, Range<Self::RoundId>)>;
 }
@@ -72,11 +77,11 @@ pub trait TrOfferSelect {
     type PositionId: TrPositionId;
     type RoundId: TrRoundId;
 
-    fn sort<'a>(
-        &'a self,
+    fn sort(
+        &self,
         current_round: Self::RoundId,
-        capability: &'a Self::Ability,
-        get_requirement: impl Fn(Self::PositionId) -> &'a Self::Ability,
+        capability: Self::Ability,
+        get_requirement: impl Fn(Self::PositionId) -> Self::Ability,
         id_iterator: impl IntoIterator<Item = Self::PositionId>,
     ) -> impl IntoIterator<Item = Self::PositionId>;
 }
@@ -92,7 +97,7 @@ pub trait TrResumeSelect {
     fn sort<'a>(
         &'a self,
         current_round: Self::RoundId,
-        requirement: &'a Self::Ability,
+        requirement: &Self::Ability,
         resume_iter: impl IntoIterator<Item = &'a Self::Resume>,
     ) -> impl IntoIterator<Item = <Self::Resume as TrResume>::CandidateId>;
 }
@@ -113,7 +118,7 @@ pub trait TrEmploymentTransform {
         &self,
         start: Self::RoundId,
         end: Self::RoundId,
-        requirement: &Self::Ability,
-        capability: &Self::Ability,
+        requirement: Self::Ability,
+        capability: Self::Ability,
     ) -> Self::Ability;
 }
